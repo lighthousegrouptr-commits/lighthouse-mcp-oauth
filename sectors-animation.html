@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Odaklandığımız Sektörler</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #06060f;
+      --bg-card:     rgba(255,255,255,0.035);
+      --bg-card-h:   rgba(255,255,255,0.065);
+      --border:      rgba(255,255,255,0.07);
+      --border-h:    rgba(255,255,255,0.16);
+      --text:        #eeeeff;
+      --text-muted:  rgba(220,220,255,0.38);
+      --blue:        #60a5fa;
+      --violet:      #a78bfa;
+      --teal:        #2dd4bf;
+      --rose:        #fb7185;
+      --amber:       #fbbf24;
+      --sky:         #38bdf8;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ═══ NOISE GRAIN OVERLAY ═══ */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* ═══ SECTION ═══ */
+    .sectors {
+      padding: 130px 0 100px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Ambient glow blobs */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      opacity: 0.25;
+    }
+    .blob-1 {
+      width: 700px; height: 500px;
+      background: radial-gradient(ellipse, #3b5bdb 0%, transparent 70%);
+      top: -100px; left: -200px;
+    }
+    .blob-2 {
+      width: 600px; height: 600px;
+      background: radial-gradient(ellipse, #7c3aed 0%, transparent 70%);
+      bottom: -150px; right: -150px;
+      opacity: 0.18;
+    }
+    .blob-3 {
+      width: 400px; height: 400px;
+      background: radial-gradient(ellipse, #0d9488 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      opacity: 0.12;
+    }
+
+    /* ═══ HEADER ═══ */
+    .sectors-header {
+      text-align: center;
+      padding: 0 24px;
+      margin-bottom: 68px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 22px;
+    }
+    .eyebrow span { opacity: 0.5; }
+
+    .eyebrow-line {
+      width: 32px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--blue));
+      opacity: 0.7;
+    }
+    .eyebrow-line.right {
+      background: linear-gradient(90deg, var(--blue), transparent);
+    }
+
+    .sectors-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(42px, 6.5vw, 80px);
+      font-weight: 400;
+      line-height: 1.07;
+      letter-spacing: -0.025em;
+      margin-bottom: 22px;
+    }
+
+    .sectors-title .normal { color: var(--text); }
+    .sectors-title .italic {
+      font-style: italic;
+      background: linear-gradient(125deg, var(--blue) 0%, var(--violet) 55%, var(--teal) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .sectors-sub {
+      font-size: 15.5px;
+      font-weight: 400;
+      color: var(--text-muted);
+      max-width: 440px;
+      margin: 0 auto;
+      line-height: 1.72;
+    }
+
+    /* ═══ MARQUEE ═══ */
+    .marquee-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+    }
+
+    /* Left & right fade masks */
+    .marquee-stack::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to right,
+        var(--bg) 0%,
+        transparent 14%,
+        transparent 86%,
+        var(--bg) 100%
+      );
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .marquee-row { overflow: hidden; }
+
+    .marquee-track {
+      display: flex;
+      gap: 14px;
+      width: max-content;
+      will-change: transform;
+    }
+
+    /* Pause on hover */
+    .marquee-row:hover .marquee-track { animation-play-state: paused; }
+
+    .marquee-track.row-a { animation: slide-left 38s linear infinite; }
+    .marquee-track.row-b { animation: slide-right 32s linear infinite; }
+    .marquee-track.row-c { animation: slide-left 50s linear infinite; }
+
+    @keyframes slide-left {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    @keyframes slide-right {
+      from { transform: translateX(-50%); }
+      to   { transform: translateX(0); }
+    }
+
+    /* ═══ CARD ═══ */
+    .card {
+      display: inline-flex;
+      align-items: center;
+      gap: 13px;
+      padding: 13px 22px 13px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      cursor: default;
+      transition:
+        background   0.28s ease,
+        border-color 0.28s ease,
+        transform    0.28s cubic-bezier(.34,1.56,.64,1),
+        box-shadow   0.28s ease;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    /* Shimmer strip on top */
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 14px; right: 14px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+      border-radius: 100px;
+      opacity: 0.7;
+    }
+
+    .card:hover {
+      background: var(--bg-card-h);
+      border-color: var(--border-h);
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 16px 40px -10px rgba(0,0,0,0.5);
+    }
+
+    /* ── Icon bubble ── */
+    .card-ico {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-ico::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .ico-blue   { background: rgba(96,165,250,0.13); }
+    .ico-violet { background: rgba(167,139,250,0.13); }
+    .ico-teal   { background: rgba(45,212,191,0.13); }
+    .ico-rose   { background: rgba(251,113,133,0.13); }
+    .ico-amber  { background: rgba(251,191,36,0.13); }
+    .ico-sky    { background: rgba(56,189,248,0.13); }
+
+    /* ── Text ── */
+    .card-meta { display: flex; flex-direction: column; gap: 1px; }
+
+    .card-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+    }
+
+    .card-tag {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-muted);
+      white-space: nowrap;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ═══ STATS ═══ */
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      margin-top: 80px;
+      padding: 0 24px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat {
+      text-align: center;
+      padding: 0 48px;
+      position: relative;
+    }
+
+    .stat + .stat::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 12px; bottom: 12px;
+      width: 1px;
+      background: var(--border);
+    }
+
+    .stat-num {
+      font-family: 'Instrument Serif', serif;
+      font-size: 52px;
+      font-weight: 400;
+      line-height: 1;
+      margin-bottom: 8px;
+      background: linear-gradient(160deg, var(--text) 40%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .stat-lbl {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media (max-width: 600px) {
+      .sectors { padding: 80px 0 60px; }
+      .sectors-title { font-size: clamp(36px, 10vw, 52px); }
+      .stat { padding: 0 24px; }
+      .stat-num { font-size: 38px; }
+    }
+  </style>
+</head>
+<body>
+
+<section class="sectors">
+  <!-- Ambient glow -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- Header -->
+  <header class="sectors-header">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span>Uzmanlık Alanlarımız</span>
+      <div class="eyebrow-line right"></div>
+    </div>
+    <h2 class="sectors-title">
+      <span class="normal">Odaklandığımız</span><br>
+      <span class="italic">Sektörler</span>
+    </h2>
+    <p class="sectors-sub">
+      20'den fazla sektörde derin uzmanlık ve özelleştirilmiş çözümler sunuyoruz.
+    </p>
+  </header>
+
+  <!-- Marquee -->
+  <div class="marquee-stack">
+    <div class="marquee-row"><div class="marquee-track row-a" id="row-a"></div></div>
+    <div class="marquee-row"><div class="marquee-track row-b" id="row-b"></div></div>
+    <div class="marquee-row"><div class="marquee-track row-c" id="row-c"></div></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-num">20+</div>
+      <div class="stat-lbl">Sektör</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">500+</div>
+      <div class="stat-lbl">Proje</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">12</div>
+      <div class="stat-lbl">Yıl Deneyim</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">98%</div>
+      <div class="stat-lbl">Memnuniyet</div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const DATA = {
+    'row-a': [
+      { ico: '🛒', col: 'ico-blue',   name: 'E-Ticaret',          tag: 'Dijital Satış'     },
+      { ico: '🏦', col: 'ico-sky',    name: 'Bankacılık',         tag: 'Finansal Hizmet'   },
+      { ico: '💊', col: 'ico-teal',   name: 'Sağlık',             tag: 'Medikal Çözümler'  },
+      { ico: '🏠', col: 'ico-amber',  name: 'Gayrimenkul',        tag: 'Emlak & Kira'      },
+      { ico: '🛡️', col: 'ico-blue',   name: 'Sigortacılık',       tag: 'Risk Yönetimi'     },
+      { ico: '🚛', col: 'ico-violet', name: 'Lojistik',           tag: 'Tedarik Zinciri'   },
+      { ico: '⚡', col: 'ico-amber',  name: 'Enerji',             tag: 'Yenilenebilir'     },
+      { ico: '🌾', col: 'ico-teal',   name: 'Tarım',              tag: 'Agritech'          },
+      { ico: '✈️', col: 'ico-sky',    name: 'Turizm',             tag: 'Seyahat & Konaklama'},
+      { ico: '⚙️', col: 'ico-blue',   name: 'Endüstriyel Üretim', tag: 'Manifaktür'        },
+    ],
+    'row-b': [
+      { ico: '💳', col: 'ico-violet', name: 'Fintech',            tag: 'Finansal Teknoloji'},
+      { ico: '📡', col: 'ico-blue',   name: 'Telekomünikasyon',   tag: 'Ağ & İletişim'    },
+      { ico: '🏪', col: 'ico-rose',   name: 'Perakende',          tag: 'Mağaza Çözümleri'  },
+      { ico: '🎓', col: 'ico-violet', name: 'Eğitim',             tag: 'Edtech'            },
+      { ico: '🏗️', col: 'ico-amber',  name: 'İnşaat',             tag: 'Yapı & Altyapı'   },
+      { ico: '🚗', col: 'ico-sky',    name: 'Otomotiv',           tag: 'Araç Teknolojisi'  },
+      { ico: '🎬', col: 'ico-rose',   name: 'Medya',              tag: 'İçerik & Yayın'    },
+      { ico: '⚖️', col: 'ico-teal',   name: 'Hukuk',              tag: 'Legaltech'         },
+      { ico: '🍽️', col: 'ico-rose',   name: 'Gıda & İçecek',     tag: 'Foodtech'          },
+      { ico: '👕', col: 'ico-violet', name: 'Tekstil & Moda',     tag: 'Fashiontech'       },
+    ],
+    'row-c': [
+      { ico: '💻', col: 'ico-blue',   name: 'Yazılım & SaaS',     tag: 'B2B Teknoloji'    },
+      { ico: '🛢️', col: 'ico-amber',  name: 'Petrol & Gaz',       tag: 'Enerji Sektörü'   },
+      { ico: '💉', col: 'ico-teal',   name: 'İlaç',               tag: 'Pharmatech'        },
+      { ico: '⚗️', col: 'ico-violet', name: 'Kimya',              tag: 'Kimyasal Üretim'   },
+      { ico: '🚢', col: 'ico-sky',    name: 'Denizcilik',          tag: 'Liman & Filo'     },
+      { ico: '🌐', col: 'ico-rose',   name: 'Sosyal Medya',       tag: 'Dijital Platformlar'},
+      { ico: '💰', col: 'ico-teal',   name: 'Yatırım',            tag: 'Varlık Yönetimi'  },
+      { ico: '🔬', col: 'ico-blue',   name: 'Ar-Ge & İnovasyon',  tag: 'Deep Tech'        },
+      { ico: '🏋️', col: 'ico-amber',  name: 'Spor & Eğlence',    tag: 'Sports Analytics'  },
+      { ico: '🌱', col: 'ico-teal',   name: 'Sürdürülebilirlik',  tag: 'ESG & Çevre'      },
+    ],
+  };
+
+  function buildCard({ ico, col, name, tag }) {
+    return `<div class="card">
+      <div class="card-ico ${col}">${ico}</div>
+      <div class="card-meta">
+        <span class="card-name">${name}</span>
+        <span class="card-tag">${tag}</span>
+      </div>
+    </div>`;
+  }
+
+  for (const [id, items] of Object.entries(DATA)) {
+    const track = document.getElementById(id);
+    const html = items.map(buildCard).join('');
+    track.innerHTML = html + html; /* duplicate for seamless loop */
+  }
+</script>
+</body>
+</html>
