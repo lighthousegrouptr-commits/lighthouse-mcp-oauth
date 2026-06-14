@@ -62,19 +62,28 @@ def new_token(prefix: str = "") -> str:
 
 @app.get("/.well-known/oauth-authorization-server")
 async def oauth_authorization_server_metadata():
-    return JSONResponse(
-        {
-            "issuer": PUBLIC_BASE_URL,
-            "authorization_endpoint": f"{PUBLIC_BASE_URL}/authorize",
-            "token_endpoint": f"{PUBLIC_BASE_URL}/token",
-            "registration_endpoint": f"{PUBLIC_BASE_URL}/register",
-            "response_types_supported": ["code"],
-            "grant_types_supported": ["authorization_code"],
-            "code_challenge_methods_supported": ["S256"],
-            "token_endpoint_auth_methods_supported": ["none", "client_secret_post"],
-            "scopes_supported": ["mcp"],
-        }
-    )
+    return JSONResponse(_authorization_server_metadata())
+
+
+@app.get("/.well-known/openid-configuration")
+async def openid_configuration_metadata():
+    return JSONResponse(_authorization_server_metadata())
+
+
+def _authorization_server_metadata() -> dict:
+    return {
+        "issuer": PUBLIC_BASE_URL,
+        "authorization_endpoint": f"{PUBLIC_BASE_URL}/authorize",
+        "token_endpoint": f"{PUBLIC_BASE_URL}/token",
+        "registration_endpoint": f"{PUBLIC_BASE_URL}/register",
+        "response_types_supported": ["code"],
+        "grant_types_supported": ["authorization_code"],
+        "code_challenge_methods_supported": ["S256"],
+        "token_endpoint_auth_methods_supported": ["none", "client_secret_post"],
+        "scopes_supported": ["mcp"],
+        "subject_types_supported": ["public"],
+        "id_token_signing_alg_values_supported": ["none"],
+    }
 
 
 @app.get("/.well-known/oauth-protected-resource")
@@ -315,6 +324,11 @@ _client = httpx.AsyncClient(base_url=UPSTREAM_BASE_URL, timeout=None)
 
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 async def proxy(path: str, request: Request):
+    # Bilinmeyen .well-known path'leri için 401 değil 404 dön - bunlar
+    # auth gerektirmeyen discovery probe'ları olabilir.
+    if path.startswith(".well-known/"):
+        return JSONResponse({"error": "not_found"}, status_code=404)
+
     # OAuth/well-known endpoint'leri yukarıdaki route'lar tarafından
     # zaten karşılanıyor; buraya düşen her şey MCP trafiğidir ve
     # geçerli bir Bearer token gerektirir.
