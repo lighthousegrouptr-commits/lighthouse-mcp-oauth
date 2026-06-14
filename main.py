@@ -23,8 +23,8 @@ import time
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, Form, Query, Request, Response
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, StreamingResponse
+from fastapi import FastAPI, Form, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 
 # --- Yapılandırma -----------------------------------------------------
 
@@ -349,13 +349,31 @@ async def proxy(path: str, request: Request):
     )
     upstream_resp = await _client.send(upstream_req, stream=True)
 
-    return StreamingResponse(
-        upstream_resp.aiter_raw(),
+    response_headers = {
+        k: v
+        for k, v in upstream_resp.headers.items()
+        if k.lower() not in ("content-length", "transfer-encoding", "connection", "date", "server")
+    }
+
+    content_type = upstream_resp.headers.get("content-type", "")
+
+    if "text/event-stream" in content_type:
+        # Uzun süreli SSE bağlantıları: stream et.
+        return StreamingResponse(
+            upstream_resp.aiter_raw(),
+            status_code=upstream_resp.status_code,
+            headers=response_headers,
+            background=None,
+        )
+
+    # Tek-shot JSON yanıtlar (örn. /mcp POST): tam body'yi okuyup
+    # düz Response dön. chunked/connection-close kombinasyonunda
+    # StreamingResponse + aiter_raw() IncompleteRead'e yol açabiliyor.
+    body_bytes = await upstream_resp.aread()
+    await upstream_resp.aclose()
+
+    return Response(
+        content=body_bytes,
         status_code=upstream_resp.status_code,
-        headers={
-            k: v
-            for k, v in upstream_resp.headers.items()
-            if k.lower() not in ("content-length", "transfer-encoding", "connection", "date", "server")
-        },
-        background=None,
+        headers=response_headers,
     )
