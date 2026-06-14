@@ -149,7 +149,7 @@ APPROVE_FORM_HTML = """
   </style>
 </head>
 <body>
-  <form method="post" action="/authorize">
+  <form method="post" action="{authorize_action}">
     <h1>Hermes MCP'ye erişim</h1>
     <p>{client_name} bu sunucuya bağlanmak istiyor.</p>
     {error_html}
@@ -187,6 +187,7 @@ async def authorize_get(
             state=state,
             code_challenge=code_challenge,
             code_challenge_method=code_challenge_method,
+            authorize_action=f"{PUBLIC_BASE_URL}/authorize",
         )
     )
 
@@ -213,6 +214,7 @@ async def authorize_post(
                 state=state,
                 code_challenge=code_challenge,
                 code_challenge_method=code_challenge_method,
+                authorize_action=f"{PUBLIC_BASE_URL}/authorize",
             ),
             status_code=401,
         )
