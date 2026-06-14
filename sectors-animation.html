@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Odaklandığımız Sektörler</title>
+  <title>Lighthouse — Bağlantısallık & Sektörler</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -322,8 +322,72 @@
       color: var(--text-muted);
     }
 
+    /* ═══ CONNECTIVITY SECTION ═══ */
+    .connect-section {
+      position: relative;
+      height: 580px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #connect-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Edge vignette — keeps canvas from bleeding hard into edges */
+    .connect-section::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 65% 65% at 50% 50%, transparent 35%, rgba(6,6,15,0.75) 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .connect-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 0 24px;
+    }
+
+    .connect-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(40px, 6.5vw, 78px);
+      font-weight: 400;
+      line-height: 1.07;
+      letter-spacing: -0.025em;
+      margin-bottom: 20px;
+    }
+
+    .connect-title .cn { color: var(--text); }
+    .connect-title .ci {
+      font-style: italic;
+      background: linear-gradient(125deg, var(--teal) 0%, var(--blue) 55%, var(--violet) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .connect-sub {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text-muted);
+      line-height: 1.72;
+      max-width: 430px;
+      margin: 0 auto;
+    }
+
     /* ═══ RESPONSIVE ═══ */
     @media (max-width: 600px) {
+      .connect-section { height: 420px; }
       .sectors { padding: 80px 0 60px; }
       .sectors-title { font-size: clamp(36px, 10vw, 52px); }
       .stat { padding: 0 24px; }
@@ -332,6 +396,26 @@
   </style>
 </head>
 <body>
+
+<!-- ══════════════ CONNECTIVITY SECTION ══════════════ -->
+<section class="connect-section">
+  <canvas id="connect-canvas"></canvas>
+
+  <div class="connect-content">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span>Dijital Ekosistem</span>
+      <div class="eyebrow-line right"></div>
+    </div>
+    <h2 class="connect-title">
+      <span class="cn">Sisteminizi</span><br>
+      <span class="ci">Birleştiriyoruz</span>
+    </h2>
+    <p class="connect-sub">
+      Veriler, platformlar ve insanlar arasında akıllı köprüler kurarak işletmenizi geleceğe taşıyoruz.
+    </p>
+  </div>
+</section>
 
 <section class="sectors">
   <!-- Ambient glow -->
@@ -384,6 +468,168 @@
 </section>
 
 <script>
+/* ══ CONNECTIVITY CANVAS ANIMATION ══ */
+(function () {
+  const canvas = document.getElementById('connect-canvas');
+  const ctx    = canvas.getContext('2d');
+
+  const PALETTES = [
+    [96,  165, 250],   // blue
+    [45,  212, 191],   // teal
+    [167, 139, 250],   // violet
+    [56,  189, 248],   // sky
+  ];
+
+  const MAX_DIST = 175;
+  const NODE_COUNT = 90;
+
+  function resize() {
+    canvas.width  = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  /* ── Node ── */
+  function makeNode() {
+    const col   = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+    const isHub = Math.random() < 0.09;
+    return {
+      x:      Math.random() * canvas.width,
+      y:      Math.random() * canvas.height,
+      vx:     (Math.random() - 0.5) * 0.28,
+      vy:     (Math.random() - 0.5) * 0.28,
+      r:      isHub ? 3 + Math.random() * 3 : 1 + Math.random() * 1.8,
+      col,
+      isHub,
+      phase:  Math.random() * Math.PI * 2,
+      pSpeed: 0.018 + Math.random() * 0.012,
+    };
+  }
+
+  function updateNode(n) {
+    n.x += n.vx;
+    n.y += n.vy;
+    n.phase += n.pSpeed;
+    if (n.x < -15) n.x = canvas.width  + 15;
+    if (n.x > canvas.width  + 15) n.x = -15;
+    if (n.y < -15) n.y = canvas.height + 15;
+    if (n.y > canvas.height + 15) n.y = -15;
+  }
+
+  function drawNode(n) {
+    const pulse = 0.65 + 0.35 * Math.sin(n.phase);
+    const [r, g, b] = n.col;
+
+    if (n.isHub) {
+      /* outer glow ring */
+      const ringR = n.r * 5.5 * pulse;
+      const glow  = ctx.createRadialGradient(n.x, n.y, n.r, n.x, n.y, ringR);
+      glow.addColorStop(0,   `rgba(${r},${g},${b},0.18)`);
+      glow.addColorStop(1,   `rgba(${r},${g},${b},0)`);
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, ringR, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
+    }
+
+    /* core dot */
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${r},${g},${b},${0.85 * pulse})`;
+    ctx.fill();
+  }
+
+  /* ── Pulse (data packet traveling along an edge) ── */
+  function makePulse(a, b) {
+    return { a, b, t: 0, speed: 0.004 + Math.random() * 0.005, dead: false, col: a.col };
+  }
+
+  function updatePulse(p) {
+    p.t += p.speed;
+    if (p.t >= 1) p.dead = true;
+  }
+
+  function drawPulse(p) {
+    const x = p.a.x + (p.b.x - p.a.x) * p.t;
+    const y = p.a.y + (p.b.y - p.a.y) * p.t;
+    const [r, g, b] = p.col;
+    const grd = ctx.createRadialGradient(x, y, 0, x, y, 7);
+    grd.addColorStop(0, `rgba(${r},${g},${b},0.95)`);
+    grd.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    ctx.beginPath();
+    ctx.arc(x, y, 7, 0, Math.PI * 2);
+    ctx.fillStyle = grd;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x, y, 2.2, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${r},${g},${b},1)`;
+    ctx.fill();
+  }
+
+  const nodes  = Array.from({ length: NODE_COUNT }, makeNode);
+  const pulses = [];
+  let frame    = 0;
+
+  function spawnPulse() {
+    const hubs = nodes.filter(n => n.isHub);
+    if (!hubs.length) return;
+    const src = hubs[Math.floor(Math.random() * hubs.length)];
+    const nearby = nodes.filter(n => {
+      if (n === src) return false;
+      const dx = n.x - src.x, dy = n.y - src.y;
+      return Math.sqrt(dx*dx + dy*dy) < MAX_DIST;
+    });
+    if (!nearby.length) return;
+    const dst = nearby[Math.floor(Math.random() * nearby.length)];
+    pulses.push(makePulse(src, dst));
+  }
+
+  function loop() {
+    requestAnimationFrame(loop);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    frame++;
+    if (frame % 50 === 0) spawnPulse();
+
+    /* draw edges */
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const d  = Math.sqrt(dx*dx + dy*dy);
+        if (d >= MAX_DIST) continue;
+
+        const alpha = (1 - d / MAX_DIST) * 0.22;
+        const [ar,ag,ab_] = a.col;
+        const [br,bg,bb_] = b.col;
+        const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+        grad.addColorStop(0,   `rgba(${ar},${ag},${ab_},${alpha})`);
+        grad.addColorStop(0.5, `rgba(${Math.round((ar+br)/2)},${Math.round((ag+bg)/2)},${Math.round((ab_+bb_)/2)},${alpha*1.6})`);
+        grad.addColorStop(1,   `rgba(${br},${bg},${bb_},${alpha})`);
+
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth   = 0.75;
+        ctx.stroke();
+      }
+    }
+
+    nodes.forEach(n => { updateNode(n); drawNode(n); });
+
+    for (let i = pulses.length - 1; i >= 0; i--) {
+      updatePulse(pulses[i]);
+      if (pulses[i].dead) pulses.splice(i, 1);
+      else drawPulse(pulses[i]);
+    }
+  }
+
+  loop();
+})();
+
+/* ══ SECTOR CARDS ══ */
   const DATA = {
     'row-a': [
       { ico: '🛒', col: 'ico-blue',   name: 'E-Ticaret',          tag: 'Dijital Satış'     },
